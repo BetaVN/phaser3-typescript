@@ -221,4 +221,12 @@ export class Mario extends Phaser.GameObjects.Sprite {
       this.body.checkCollision.right = false;
     }
   }
+
+  public getCurrentPositionX(): number {
+    return this.x
+  }
+
+  public getCurrentPositionY(): number {
+    return this.y
+  }
 }

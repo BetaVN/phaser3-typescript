@@ -58,4 +58,8 @@ export class Enemy extends Phaser.GameObjects.Sprite {
       }
     });
   }
+
+  public isDead(): void {
+    this.destroy();
+  }
 }

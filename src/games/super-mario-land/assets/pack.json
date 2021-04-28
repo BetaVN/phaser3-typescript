@@ -87,6 +87,24 @@
         }
       },
       {
+        "type": "spritesheet",
+        "key": "bullet",
+        "url": "./assets/sprites/bullet.png",
+        "frameConfig": {
+          "frameWidth": 14,
+          "frameHeight": 12
+        }
+      },
+      {
+        "type": "spritesheet",
+        "key": "banzai",
+        "url": "./assets/sprites/banzai.png",
+        "frameConfig": {
+          "frameWidth": 256,
+          "frameHeight": 256
+        }
+      },
+      {
         "type": "image",
         "key": "platform",
         "url": "./assets/images/platform.png"

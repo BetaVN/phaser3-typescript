@@ -1,5 +1,7 @@
+import { Banzai } from '../objects/banzai';
 import { Box } from '../objects/box';
 import { Brick } from '../objects/brick';
+import { Bullet } from '../objects/bullet';
 import { Collectible } from '../objects/collectible';
 import { Goomba } from '../objects/goomba';
 import { Mario } from '../objects/mario';
@@ -18,6 +20,8 @@ export class GameScene extends Phaser.Scene {
   private bricks: Phaser.GameObjects.Group;
   private collectibles: Phaser.GameObjects.Group;
   private enemies: Phaser.GameObjects.Group;
+  private bullets: Phaser.GameObjects.Group;
+  private banzais: Phaser.GameObjects.Group;
   private platforms: Phaser.GameObjects.Group;
   private player: Mario;
   private portals: Phaser.GameObjects.Group;
@@ -84,6 +88,12 @@ export class GameScene extends Phaser.Scene {
       runChildUpdate: true
     });
 
+    this.bullets = this.add.group()
+
+    this.banzais = this.add.group({
+      runChildUpdate: true
+    })
+
     this.platforms = this.add.group({
       /*classType: Platform,*/
       runChildUpdate: true
@@ -113,6 +123,22 @@ export class GameScene extends Phaser.Scene {
       this.enemies,
       this.handlePlayerEnemyOverlap,
       null,
+      this
+    );
+
+    this.physics.add.overlap(
+      this.player,
+      this.banzais,
+      this.handlePlayerBanzaisOverlap,
+      null,
+      this
+    );
+
+    this.physics.add.overlap(
+      this.player,
+      this.bullets,
+      this.handlePlayerBulletsOverlap,
+      null, 
       this
     );
 
@@ -154,6 +180,7 @@ export class GameScene extends Phaser.Scene {
 
   update(): void {
     this.player.update();
+    this.specialEnemiesUpdate();
   }
 
   private loadObjectsFromTilemap(): void {
@@ -196,6 +223,28 @@ export class GameScene extends Phaser.Scene {
             texture: 'goomba'
           })
         );
+      }
+
+      if (object.type === 'bullet') {
+        this.bullets.add(
+          new Bullet({
+            scene: this,
+            x: object.x,
+            y: object.y,
+            texture: 'bullet'
+          })
+        )
+      }
+
+      if (object.type === 'banzai') {
+        this.banzais.add(
+          new Banzai({
+            scene: this,
+            x: object.x,
+            y: object.y,
+            texture: 'banzai'
+          })
+        )
       }
 
       if (object.type === 'brick') {
@@ -282,6 +331,52 @@ export class GameScene extends Phaser.Scene {
       // player hit enemy on top
       _player.bounceUpAfterHitEnemyOnHead();
       _enemy.gotHitOnHead();
+      this.add.tween({
+        targets: _enemy,
+        props: { alpha: 0 },
+        duration: 1000,
+        ease: 'Power0',
+        yoyo: false,
+        onComplete: function () {
+          _enemy.isDead();
+        }
+      });
+    } else {
+      // player got hit from the side or on the head
+      if (_player.getVulnerable()) {
+        _player.gotHit();
+      }
+    }
+  }
+
+  private handlePlayerBulletsOverlap(_player: Mario, _enemy: Bullet): void {
+    if (_player.body.touching.down && _enemy.body.touching.up) {
+      // player hit enemy on top
+      _player.bounceUpAfterHitEnemyOnHead();
+      _enemy.gotHit();
+      this.add.tween({
+        targets: _enemy,
+        props: { alpha: 0 },
+        duration: 1000,
+        ease: 'Power0',
+        yoyo: false,
+        onComplete: function () {
+          _enemy.isDead();
+        }
+      });
+    } else {
+      // player got hit from the side or on the head
+      if (_player.getVulnerable()) {
+        _player.gotHit();
+      }
+    }
+  }
+
+  private handlePlayerBanzaisOverlap(_player: Mario, _enemy: Banzai): void {
+    if (_player.body.touching.down && _enemy.body.touching.up) {
+      // player hit enemy on top
+      _player.bounceUpAfterHitEnemyOnHead();
+      _enemy.gotHit();
       this.add.tween({
         targets: _enemy,
         props: { alpha: 0 },
@@ -406,5 +501,12 @@ export class GameScene extends Phaser.Scene {
       player.body.touching.down
     ) {
     }
+  }
+
+  private specialEnemiesUpdate(): void {
+    this.bullets.getChildren().forEach((enemy: Bullet) => {
+      enemy.setTargetPosition(this.player.getCurrentPositionX(), this.player.getCurrentPositionY())
+      enemy.update()
+    })
   }
 }

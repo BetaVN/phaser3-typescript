@@ -56,7 +56,5 @@ export class Goomba extends Enemy {
     this.setFlipY(true);
   }
 
-  public isDead(): void {
-    this.destroy();
-  }
+  
 }

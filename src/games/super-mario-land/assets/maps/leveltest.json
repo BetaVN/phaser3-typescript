@@ -698,17 +698,6 @@
         },
         {
           "height": 8,
-          "id": 256,
-          "name": "banzai",
-          "rotation": 0,
-          "type": "banzai",
-          "visible": true,
-          "width": 8,
-          "x": 200,
-          "y": 70
-        },
-        {
-          "height": 8,
           "id": 258,
           "name": "goomba",
           "rotation": 0,
