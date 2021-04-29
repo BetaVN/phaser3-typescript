@@ -677,9 +677,9 @@
         {
           "height": 8,
           "id": 256,
-          "name": "goomba",
+          "name": "kamek",
           "rotation": 0,
-          "type": "goomba",
+          "type": "kamek",
           "visible": true,
           "width": 8,
           "x": 200,

@@ -14,6 +14,11 @@
       },
       {
         "type": "tilemapTiledJSON",
+        "key": "custom1",
+        "url": "./assets/maps/customlevel1.json"
+      },
+      {
+        "type": "tilemapTiledJSON",
         "key": "level1Room1",
         "url": "./assets/maps/level1Room1.json"
       },
@@ -102,6 +107,24 @@
         "frameConfig": {
           "frameWidth": 256,
           "frameHeight": 256
+        }
+      },
+      {
+        "type": "spritesheet",
+        "key": "kamek",
+        "url": "./assets/sprites/kamek.png",
+        "frameConfig": {
+          "frameWidth": 83,
+          "frameHeight": 68
+        }
+      },
+      {
+        "type": "spritesheet",
+        "key": "flame",
+        "url": "./assets/sprites/flame.png",
+        "frameConfig": {
+          "frameWidth": 769,
+          "frameHeight": 781
         }
       },
       {

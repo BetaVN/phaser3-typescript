@@ -3,7 +3,9 @@ import { Box } from '../objects/box';
 import { Brick } from '../objects/brick';
 import { Bullet } from '../objects/bullet';
 import { Collectible } from '../objects/collectible';
+import { Flame } from '../objects/flame';
 import { Goomba } from '../objects/goomba';
+import { Kamek } from '../objects/kamek';
 import { Mario } from '../objects/mario';
 import { Platform } from '../objects/platform';
 import { Portal } from '../objects/portal';
@@ -22,6 +24,8 @@ export class GameScene extends Phaser.Scene {
   private enemies: Phaser.GameObjects.Group;
   private bullets: Phaser.GameObjects.Group;
   private banzais: Phaser.GameObjects.Group;
+  private kameks: Phaser.GameObjects.Group;
+  private flames: Phaser.GameObjects.Group;
   private platforms: Phaser.GameObjects.Group;
   private player: Mario;
   private portals: Phaser.GameObjects.Group;
@@ -32,7 +36,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  init(): void {}
+  init(): void { }
 
   create(): void {
     // *****************************************************************
@@ -40,7 +44,7 @@ export class GameScene extends Phaser.Scene {
     // *****************************************************************
 
     // create our tilemap from Tiled JSON
-    this.map = this.make.tilemap({ key: this.registry.get('level') });
+    this.map = this.make.tilemap({ key: "custom1" });
     // add our tileset and layers to our tilemap
     this.tileset = this.map.addTilesetImage('tiles');
     this.backgroundLayer = this.map.createLayer(
@@ -57,6 +61,7 @@ export class GameScene extends Phaser.Scene {
       0
     );
     this.foregroundLayer.setName('foregroundLayer');
+    console.log(this.foregroundLayer)
 
     // set collision for tiles with the property collide set to true
     this.foregroundLayer.setCollisionByProperty({ collide: true });
@@ -94,6 +99,11 @@ export class GameScene extends Phaser.Scene {
       runChildUpdate: true
     })
 
+    this.kameks = this.add.group({})
+    this.flames = this.add.group({
+      runChildUpdate: true
+    })
+
     this.platforms = this.add.group({
       /*classType: Platform,*/
       runChildUpdate: true
@@ -108,6 +118,9 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.enemies, this.foregroundLayer);
     this.physics.add.collider(this.enemies, this.boxes);
     this.physics.add.collider(this.enemies, this.bricks);
+    this.physics.add.collider(this.kameks, this.foregroundLayer);
+    this.physics.add.collider(this.kameks, this.boxes);
+    this.physics.add.collider(this.kameks, this.bricks);
     this.physics.add.collider(this.player, this.bricks);
 
     this.physics.add.collider(
@@ -136,9 +149,25 @@ export class GameScene extends Phaser.Scene {
 
     this.physics.add.overlap(
       this.player,
+      this.kameks,
+      this.handlePlayerKameksOverlap,
+      null,
+      this
+    );
+
+    this.physics.add.overlap(
+      this.player,
+      this.flames,
+      this.handlePlayerFlameOverlap,
+      null,
+      this
+    );
+
+    this.physics.add.overlap(
+      this.player,
       this.bullets,
       this.handlePlayerBulletsOverlap,
-      null, 
+      null,
       this
     );
 
@@ -176,11 +205,19 @@ export class GameScene extends Phaser.Scene {
       this.map.widthInPixels,
       this.map.heightInPixels
     );
+
+    this.anims.create({
+      key: "kamekCast",
+      frames: this.anims.generateFrameNumbers("kamek", { start: 1, end: 2 }),
+      frameRate: 2,
+      repeat: 1
+    })
   }
 
   update(): void {
     this.player.update();
     this.specialEnemiesUpdate();
+    this.kameksUpdate();
   }
 
   private loadObjectsFromTilemap(): void {
@@ -234,6 +271,17 @@ export class GameScene extends Phaser.Scene {
             texture: 'bullet'
           })
         )
+      }
+
+      if (object.type === 'kamek') {
+        var newKamek = new Kamek({
+          scene: this,
+          x: object.x,
+          y: object.y,
+          texture: 'kamek'
+        })
+        newKamek.getFlameProjectileCallback(this.addFlameProjectile.bind(this))
+        this.kameks.add(newKamek)
       }
 
       if (object.type === 'banzai') {
@@ -395,6 +443,35 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private handlePlayerKameksOverlap(_player: Mario, _enemy: Kamek): void {
+    if (_player.body.touching.down && _enemy.body.touching.up) {
+      // player hit enemy on top
+      _player.bounceUpAfterHitEnemyOnHead();
+      _enemy.gotHit();
+      this.add.tween({
+        targets: _enemy,
+        props: { alpha: 0 },
+        duration: 1000,
+        ease: 'Power0',
+        yoyo: false,
+        onComplete: function () {
+          _enemy.isDead();
+        }
+      });
+    } else {
+      // player got hit from the side or on the head
+      if (_player.getVulnerable()) {
+        _player.gotHit();
+      }
+    }
+  }
+
+  private handlePlayerFlameOverlap(_player: Mario, _enemy: Flame): void {
+    if (_player.getVulnerable()) {
+      _player.gotHit();
+    }
+  }
+
   /**
    * Player <-> Box Collision
    * @param _player [Mario]
@@ -508,5 +585,24 @@ export class GameScene extends Phaser.Scene {
       enemy.setTargetPosition(this.player.getCurrentPositionX(), this.player.getCurrentPositionY())
       enemy.update()
     })
+  }
+
+  private kameksUpdate(): void {
+    this.kameks.getChildren().forEach((enemy: Kamek) => {
+      enemy.setTargetPosition(this.player.getCurrentPositionX(), this.player.getCurrentPositionY())
+      enemy.update()
+    })
+  }
+
+  private addFlameProjectile(targetX: number, targetY: number, userX: number, userY: number) {
+    let spriteConstructor = {
+      scene: this,
+      x: userX,
+      y: userY,
+      texture: "flame"
+    }
+    var newFlameProjectile = new Flame(spriteConstructor)
+    newFlameProjectile.assignTarget(targetX, targetY)
+    this.flames.add(newFlameProjectile)
   }
 }
